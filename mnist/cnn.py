@@ -1,5 +1,8 @@
 __author__ = 'chapter'
 
+from datetime import datetime
+import time
+
 import argparse
 import sys
 
@@ -27,7 +30,6 @@ def main(_):
     print("Download Done!")
 
     sess = tf.InteractiveSession()
-
     # paras
     W_conv1 = weight_varible([5, 5, 1, 32])
     b_conv1 = bias_variable([32])
@@ -73,7 +75,8 @@ def main(_):
 
     sess.run(tf.global_variables_initializer())
 
-    for i in range(20000):
+    start_time = time.time()
+    for i in range(200):
         batch = mnist.train.next_batch(50)
 
         if i % 100 == 0:
@@ -81,8 +84,9 @@ def main(_):
             print("step %d, training accuracy %g"%(i, train_accuacy))
         train_step.run(feed_dict = {x: batch[0], y_: batch[1], keep_prob: 0.5})
 
+    duration = time.time() - start_time
     # accuacy on test
-    print("test accuracy %g"%(accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0})))
+    print("test accuracy %g, used %d seconds"%(accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}), duration))
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
