@@ -25,49 +25,69 @@ def max_pool_2x2(x):
 
 FLAGS = None
 
+
+def model(x_image, W1, b1, W2, b2, Wc1, bc1, keep_prob, Wc2, bc2):
+    with tf.device('/gpu:0'):
+
+      # layer-1
+      h_conv1 = tf.nn.relu(conv2d(x_image, W1) + b1)
+      h_pool1 = max_pool_2x2(h_conv1)
+
+      # layer-2
+      h_conv2 = tf.nn.relu(conv2d(h_pool1, W2) + b2)
+      h_pool2 = max_pool_2x2(h_conv2)
+
+      # full connection
+      h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
+      h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, Wc1) + bc1)
+
+      # dropout
+      h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
+
+      # output layer: softmax
+      Wc2 = weight_varible([1024, 10])
+      bc2 = bias_variable([10])
+      y_conv = tf.matmul(h_fc1_drop, Wc2) + bc2
+      return y_conv
+
 def main(_):
     mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
     print("Download Done!")
-
-    sess = tf.InteractiveSession()
-    # paras
-    W_conv1 = weight_varible([5, 5, 1, 32])
-    b_conv1 = bias_variable([32])
-
-    # conv layer-1
+      
+    # input
     x = tf.placeholder(tf.float32, [None, 784])
     x_image = tf.reshape(x, [-1, 28, 28, 1])
 
-    h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-    h_pool1 = max_pool_2x2(h_conv1)
-
+    # conv layer-1
+    W1 = weight_varible([5, 5, 1, 32])
+    b1 = bias_variable([32])
+    
     # conv layer-2
-    W_conv2 = weight_varible([5, 5, 32, 64])
-    b_conv2 = bias_variable([64])
-
-    h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-    h_pool2 = max_pool_2x2(h_conv2)
-
+    W2 = weight_varible([5, 5, 32, 64])
+    b2 = bias_variable([64])
+    
     # full connection
     W_fc1 = weight_varible([7 * 7 * 64, 1024])
     b_fc1 = bias_variable([1024])
 
-    h_pool2_flat = tf.reshape(h_pool2, [-1, 7 * 7 * 64])
-    h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
-
     # dropout
     keep_prob = tf.placeholder(tf.float32)
-    h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-
+    
     # output layer: softmax
     W_fc2 = weight_varible([1024, 10])
     b_fc2 = bias_variable([10])
 
-    y_conv = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
+    y_conv = model(x_image, W1, b1, W2, b2, W_fc1, b_fc1, keep_prob, W_fc2, b_fc2) 
     y_ = tf.placeholder(tf.float32, [None, 10])
+    
+    sess = tf.InteractiveSession(config=tf.ConfigProto(
+        log_device_placement=True)) 
 
     # model training
-    cross_entropy = -tf.reduce_sum(y_ * tf.log(y_conv))
+    #cross_entropy = -tf.reduce_sum(y_ * tf.log(y_conv))
+    cross_entropy = tf.reduce_mean(
+      tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
+
     train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 
     correct_prediction = tf.equal(tf.arg_max(y_conv, 1), tf.arg_max(y_, 1))
