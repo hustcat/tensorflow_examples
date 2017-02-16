@@ -113,7 +113,7 @@ def main(_):
 
 
       # Test trained model
-      print("Test-Accuracy: %2.2f" % sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
+      print("Test-Accuracy: %2.4f" % sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
 
     print("Total Time: %3.2fs" % float(time.time() - begin_time))
     # Ask for all the services to stop.
