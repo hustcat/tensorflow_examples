@@ -139,12 +139,12 @@ def main(_):
         if step % frequency == 0: 
             print ("Done step %d" % step, " AvgTime: %3.2fms" % float(elapsed_time*1000/frequency))
 
+      # Test trained model
+      print("Test-Accuracy: %2.4f" % sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
 
       # signal to ps shards that we are done
       #for q in create_done_queues():
       #sess.run(q.enqueue(1))
-      # Test trained model
-      print("Test-Accuracy: %2.4f" % sess.run(accuracy, feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
       for op in enq_ops:
         sess.run(op)
     print("Total Time: %3.2fs" % float(time.time() - begin_time))
