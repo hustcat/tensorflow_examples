@@ -19,6 +19,7 @@ tf.app.flags.DEFINE_integer("hidden_units", 100,
 tf.app.flags.DEFINE_string("data_dir", "/tmp/tensorflow/mnist/input_data/",
                            "Directory for storing mnist data")
 tf.app.flags.DEFINE_integer("batch_size", 100, "Training batch size")
+tf.app.flags.DEFINE_integer("max_step", 100, "Training batch size")
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -81,12 +82,12 @@ def main(_):
 
     # Create a "supervisor", which oversees the training process.
     sv = tf.train.Supervisor(is_chief=(FLAGS.task_index == 0),
-                             logdir="./train_logs",
+                             logdir="./logs_%d" % FLAGS.task_index,
                              init_op=init_op,
                              summary_op=summary_op,
                              saver=saver,
                              global_step=global_step,
-                             save_model_secs=600)
+                             save_model_secs=60)
 
     mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
 
